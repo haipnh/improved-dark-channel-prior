@@ -132,7 +132,6 @@ void get_dark_channel(const cv::Mat *p_src, std::vector<Pixel> &tmp_vec, int row
           uchar b = tmp[0];
           uchar g = tmp[1];
           uchar r = tmp[2];
-          std::sort(tmp, tmp+3);
           uchar minpixel = b > g ? ((g>r) ? r : g) : ((b > r) ? r : b);
           min_val = cv::min((double)minpixel, min_val);
         }
