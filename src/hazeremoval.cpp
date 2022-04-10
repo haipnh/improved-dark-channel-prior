@@ -1,4 +1,5 @@
 #include "hazeremoval.h"
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <chrono>
@@ -119,20 +120,46 @@ bool sort_fun(const Pixel&a, const Pixel&b) {
 }
 
 void get_dark_channel(const cv::Mat *p_src, std::vector<Pixel> &tmp_vec, int rows, int cols, int channels, int radius) {
+  int rmin;
+  int rmax;
+  int cmin;
+  int cmax;
+  double min_val;
+  cv::Vec3b tmp;
+  uchar b, g, r;
+  std::vector<uchar> tmp_value(3);
+  uchar median;
+  uchar threshold_lo;
+  uchar minpixel;
   for (int i = 0; i < rows; i++) {
     for (int j = 0; j < cols; j++) {
-      int rmin = cv::max(0, i - radius);
-      int rmax = cv::min(i + radius, rows - 1);
-      int cmin = cv::max(0, j - radius);
-      int cmax = cv::min(j + radius, cols - 1);
-      double min_val = 255;
+      rmin = cv::max(0, i - radius);
+      rmax = cv::min(i + radius, rows - 1);
+      cmin = cv::max(0, j - radius);
+      cmax = cv::min(j + radius, cols - 1);
+      min_val = 255;
       for (int x = rmin; x <= rmax; x++) {
         for (int y = cmin; y <= cmax; y++) {
-          cv::Vec3b tmp = p_src->ptr<cv::Vec3b>(x)[y];
-          uchar b = tmp[0];
-          uchar g = tmp[1];
-          uchar r = tmp[2];
-          uchar minpixel = b > g ? ((g>r) ? r : g) : ((b > r) ? r : b);
+          tmp = p_src->ptr<cv::Vec3b>(x)[y];
+          b = tmp[0];
+          g = tmp[1];
+          r = tmp[2];
+          // find median value
+          tmp_value[0] = b;
+          tmp_value[0] = g;
+          tmp_value[0] = r;
+          //cout << to_string(b) << " - " << to_string(g) << " - " << to_string(r) << "\n";
+          std::sort(tmp_value.begin(), tmp_value.end());
+          //cout << to_string(tmp_value[0]) << " - " << to_string(tmp_value[1]) << " - " << to_string(tmp_value[2]) << "\n";
+          median = tmp_value[1]/2;
+          threshold_lo = median/1.5;
+          //uchar threshold_hi = median*1.5;
+          if (b < threshold_lo)
+            minpixel = (g>r) ? r : g;
+          else
+            minpixel = b > g ? ((g>r) ? r : g) : ((b > r) ? r : b);
+          //cout << to_string(median) << " - " << to_string(threshold_lo) << "\n----------\n";
+          //if (y==100)  exit(0);
           min_val = cv::min((double)minpixel, min_val);
         }
       }
